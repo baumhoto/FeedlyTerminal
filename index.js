@@ -2,12 +2,14 @@ var Feedly = require('feedly');
 var util = require('util');
 var q = require('q');
 var request = require('request');
+var read = require('node-read');
 
 var f = new Feedly({
   client_id: 'sandbox',
   client_secret: 'A4143F56J75FGQY7TAJM',
   port: 8080
 });
+
 
 
 
@@ -165,6 +167,7 @@ var content = blessed.box({
   keys: true,
   vi: true,
   mouse: true,
+  scrollable: true,
   border: 'line',
   scrollbar: {
     ch: ' ',
@@ -284,17 +287,30 @@ listEntries.on('select', function(el, selected) {
   if (listEntries._.rendering) return;
 
   var name = el.getText();
-  var id = entriesMap[name].summary.content;
-  content.setContent(id);
+  var url = entriesMap[name].alternate[0].href;
+
+  //console.log(url);
+  listEntries._.rendering = true;
+  loader.load('Loading...');
+
+  read(url, function(err, article, res) {
+    listEntries._.rendering = false;
+    loader.stop();
+    // Main Article.
+    content.setContent(article.content);
+    content.focus();
+    screen.render();
+    // Title
+    //console.log(article.title);
+  });
+
+  //content.setContent(id);
   //content.focus();
-  screen.render();
+  //screen.render();
   //status.setContent(id);
 
-  //listEntries._.rendering = true;
-  //loader.load('Loading...');
-  //  listEntries._.rendering = false;
-  //  loader.stop();
   //  screen.render();
+
 });
 
 listEntries.key('j', function(ch, key) {
@@ -320,10 +336,14 @@ function listEntriesScrollDown(ch, key) {
     switch (key.name) {
       case 'j':
       case 'down':
+          if(index == Object.keys(entriesMap).length)
+            return;
           listEntriesScroll(index + 1);
         break;
       case 'k':
       case 'up':
+          if(index == 0)
+            return;
           listEntriesScroll(index - 1);
           break;
       default:
@@ -351,9 +371,17 @@ listEntries.items.forEach(function(item, i) {
 listCategories.focus();
 //list.enterSelected(0);
 
-screen.key('h', function() {
-  listCategories.toggle();
-  if (list.visible) list.focus();
+screen.key('i', function() {
+  listCategories.focus();
+});
+
+screen.key('o', function() {
+  listEntries.focus();
+  content.resetScroll();
+});
+
+screen.key('p', function() {
+  content.focus();
 });
 
 screen.key('q', function() {
