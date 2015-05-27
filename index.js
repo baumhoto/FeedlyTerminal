@@ -280,6 +280,64 @@ listCategories.on('select', function(el, selected) {
   */
 });
 
+listEntries.on('select', function(el, selected) {
+  if (listEntries._.rendering) return;
+
+  var name = el.getText();
+  var id = entriesMap[name].summary.content;
+  content.setContent(id);
+  //content.focus();
+  screen.render();
+  //status.setContent(id);
+
+  //listEntries._.rendering = true;
+  //loader.load('Loading...');
+  //  listEntries._.rendering = false;
+  //  loader.stop();
+  //  screen.render();
+});
+
+listEntries.key('j', function(ch, key) {
+  listEntriesScrollDown(ch, key);
+});
+
+listEntries.key('down', function(ch, key) {
+  listEntriesScrollDown(ch, key);
+});
+
+listEntries.key('k', function(ch, key) {
+  listEntriesScrollDown(ch, key);
+});
+
+listEntries.key('up', function(ch, key) {
+  listEntriesScrollDown(ch, key);
+});
+
+function listEntriesScrollDown(ch, key) {
+  if(listEntries.focused)
+  {
+    var index = listEntries.getScroll();
+    switch (key.name) {
+      case 'j':
+      case 'down':
+          listEntriesScroll(index + 1);
+        break;
+      case 'k':
+      case 'up':
+          listEntriesScroll(index - 1);
+          break;
+      default:
+    }
+  }
+}
+
+function listEntriesScroll(index) {
+  var name = listEntries.getItem(index).getText();
+  var id = entriesMap[name].summary.content;
+  content.setContent(id);
+  screen.render();
+}
+
 listCategories.items.forEach(function(item, i) {
   var text = item.label;
   item.setHover(categoriesMap[text]);
