@@ -6,54 +6,12 @@ var read = require('node-read');
 
 var f = new Feedly({
   client_id: 'sandbox',
-  client_secret: 'A4143F56J75FGQY7TAJM',
   port: 8080
 });
-
-
-
-
-//console.log(map);
-/*
-f.stream('user/ba92d44e-3673-4644-bdd7-d188a6c9e31b/category/hacker').then(function(results) {
-  console.log(results);
-},
-function (error) {
-	console.log(error);
-});
-
-f.contents('user/ba92d44e-3673-4644-bdd7-d188a6c9e31b/category/global.all').then(function(results) {
-  console.log('callback');
-  //setTimeout(console.log(results), 3000);
-  //console.log(JSON.stringify(results));
-  //console.log('3ld' + results);
-},
-function (error) {
-  console.log(error);
-});
-
-
-*/
-/*
-var promise = f.contents('user/ba92d44e-3673-4644-bdd7-d188a6c9e31b/category/global.all');
-
-//var promise = f.subscriptions('user/ba92d44e-3673-4644-bdd7-d188a6c9e31b');
-
-q.all(promise).then(function(result) {
-  console.log(result);
-})
-*/
 
 var blessed = require('blessed')
 , fs = require('fs');
 
-// $ wget -r -o log --tries=10 'http://artscene.textfiles.com/ansi/'
-// $ grep 'http.*\.ans$' log | awk '{ print $3 }' > ansi-art.list
-/*
-var max = Object.keys(map).reduce(function(out, text) {
-  return Math.max(out, text.length);
-}, 0) + 6;
-*/
 var screen = blessed.screen({
   smartCSR: true,
   dockBorders: true
@@ -145,6 +103,9 @@ var categoriesMap = null;
 
 f.categories().then(function(results) {
   categoriesMap = new Object();
+  var userId = results[0].id.substring(0, results[0].id.lastIndexOf('/'));
+  results.unshift({ id: userId + '/global.saved', label: 'Saved'});
+  results.unshift({ id: userId + '/global.all', label: 'All'});
   results.forEach(function(obj) {
     categoriesMap[obj.label] = obj;
     });
@@ -249,18 +210,17 @@ listCategories.on('select', function(el, selected) {
   listCategories._.rendering = true;
   loader.load('Loading...');
 
-  var promise = f.contents(id);
+  var promise = f.contents(id, 500, 'oldest', true);
 
   q.all(promise).then(function(result) {
     listCategories._.rendering = false;
     loader.stop();
 
-    //console.log(result);
     entriesMap = new Object();
     result.items.forEach(function(obj) {
-      //console.log(obj);
       entriesMap[obj.title] = obj;
       });
+
     listEntries.setItems(Object.keys(entriesMap));
     listEntries.focus();
   },
@@ -268,19 +228,6 @@ listCategories.on('select', function(el, selected) {
     console.log(error);
   });
   screen.render();
-
-    //console.log(result);
-
-    /*
-      return cp437ToUtf8(body, function(err, body) {
-        if (err) {
-          return msg.error(err.message);
-        }
-
-        screen.render();
-  })
-  });
-  */
 });
 
 listEntries.on('select', function(el, selected) {
@@ -296,22 +243,21 @@ listEntries.on('select', function(el, selected) {
   read(url, function(err, article, res) {
     listEntries._.rendering = false;
     loader.stop();
-    // Main Article.
-    content.setContent(article.content);
+    var formattedContent = beautifyArticleString(article);
+    content.setContent(formattedContent);
     content.focus();
     screen.render();
-    // Title
-    //console.log(article.title);
   });
 
-  //content.setContent(id);
-  //content.focus();
-  //screen.render();
-  //status.setContent(id);
-
-  //  screen.render();
-
 });
+
+function beautifyArticleString(article)
+{
+  var content = article.title;
+
+  return content += article.content.split("/<p[^>]*>/g").join("\n\n\n").split("</p>").join("")
+    .replace(/<(?:.|\n)*?>/gm, '');
+}
 
 listEntries.key('j', function(ch, key) {
   listEntriesScrollDown(ch, key);
@@ -336,8 +282,9 @@ function listEntriesScrollDown(ch, key) {
     switch (key.name) {
       case 'j':
       case 'down':
-          if(index == Object.keys(entriesMap).length)
+          if(index >= Object.keys(entriesMap).length - 1)
             return;
+          //markAsRead(index);
           listEntriesScroll(index + 1);
         break;
       case 'k':
@@ -351,10 +298,54 @@ function listEntriesScrollDown(ch, key) {
   }
 }
 
+function markAsRead(index) {
+  var item = listEntries.getItem(index);
+  var name = item.getText();
+  item = entriesMap[name];
+  f.markEntryRead(item.id).then(function(results){
+      updateStatus('success marked as read');
+  },
+  function (error) {
+      updateStatus(error);
+  });
+}
+
+function markAsSaved(index) {
+  var item = listEntries.getItem(index);
+  var name = item.getText();
+  item = entriesMap[name];
+  f.markEntrySaved(item.id).then(function(results){
+      updateStatus('success marked as saved');
+  },
+  function (error) {
+      updateStatus(error);
+  });
+}
+
 function listEntriesScroll(index) {
-  var name = listEntries.getItem(index).getText();
-  var id = entriesMap[name].summary.content;
-  content.setContent(id);
+  var item = listEntries.getItem(index);
+  var text = "";
+  if(item == null)
+  {
+    //console.log(index + " not found. Length:" + Object.keys(entriesMap).length);
+  }
+  else
+  {
+    var name = item.getText();
+    if(entriesMap[name].summary != null) {
+      text = entriesMap[name].summary.content;
+    }
+    else {
+      //console.log(name + " not found in entriesmap");
+    }
+  }
+
+  content.setContent(text);
+  screen.render();
+}
+
+function updateStatus(content) {
+  status.setContent(content);
   screen.render();
 }
 
@@ -372,21 +363,44 @@ listCategories.focus();
 //list.enterSelected(0);
 
 screen.key('i', function() {
+  content.resetScroll();
   listCategories.focus();
 });
 
 screen.key('o', function() {
-  listEntries.focus();
   content.resetScroll();
+  listEntries.focus();
 });
 
 screen.key('p', function() {
-  content.focus();
+  listCategories.focus();
 });
 
 screen.key('q', function() {
   return process.exit(0);
 });
+
+screen.key('s', function() {
+  var index = listEntries.getScroll();
+  markAsSaved(index);
+});
+
+screen.key('m', function() {
+  var index = listEntries.getScroll();
+  var values = Object.keys(entriesMap);
+  var result = [];
+  for(i = 0; i<= index; i++)
+  {
+    result.push(entriesMap[values[i]].id);
+  }
+  f.markEntryRead(result).then(function(results){
+      updateStatus('marked ' + i + ' items as read');
+  },
+  function (error) {
+      updateStatus(error);
+  });
+});
+
 
 screen.render();
 
