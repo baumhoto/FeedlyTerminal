@@ -99,6 +99,14 @@ var listEntries = blessed.list({
   }
 });
 
+function setlistEntrieslabel(string) {
+  listEntries.setLabel({text:'{bold}{cyan-fg}Feed Entries (' + string +')',side:'center'});
+}
+
+function setContentLabel(string) {
+  content.setLabel({text:'{bold}{cyan-fg}Feed Name: ' + string,side:'center'});
+}
+
 var categoriesMap = null;
 
 f.categories().then(function(results) {
@@ -112,13 +120,13 @@ f.categories().then(function(results) {
   listCategories.setItems(Object.keys(categoriesMap));
 },
 function (error) {
-	console.log(error);
+	updateStatus(error);
 });
 
 
 var content = blessed.box({
   parent: screen,
-  label: ' {bold}{cyan-fg}Feed Content',
+  label: ' {bold}{cyan-fg}Feed Source:',
   tags: true,
   draggable: true,
   bottom: 1,
@@ -222,10 +230,11 @@ listCategories.on('select', function(el, selected) {
       });
 
     listEntries.setItems(Object.keys(entriesMap));
+    setlistEntrieslabel(Object.keys(entriesMap).length);
     listEntries.focus();
   },
   function (error) {
-    console.log(error);
+    updateStatus(error);
   });
   screen.render();
 });
@@ -236,26 +245,37 @@ listEntries.on('select', function(el, selected) {
   var name = el.getText();
   var url = entriesMap[name].alternate[0].href;
 
-  //console.log(url);
   listEntries._.rendering = true;
   loader.load('Loading...');
 
   read(url, function(err, article, res) {
     listEntries._.rendering = false;
     loader.stop();
-    var formattedContent = beautifyArticleString(article);
-    content.setContent(formattedContent);
-    content.focus();
-    screen.render();
+    if(article == null) {
+        updateStatus('Error fetching article');
+        return;
+    }
+
+    var formattedContent = beautifyString(article.title + ' ' + article.content);
+    try {
+      content.setContent(formattedContent);
+      content.focus();
+      screen.render();
+    }
+    catch(ex) {
+      content.setContent('');
+      updateStatus(ex);
+    }
+    finally {
+      screen.render();
+    }
   });
 
 });
 
-function beautifyArticleString(article)
+function beautifyString(string)
 {
-  var content = article.title;
-
-  return content += article.content.split("/<p[^>]*>/g").join("\n\n\n").split("</p>").join("")
+  return string.split("/<p[^>]*>/g").join("\n\n\n").split("</p>").join("")
     .replace(/<(?:.|\n)*?>/gm, '');
 }
 
@@ -325,28 +345,41 @@ function markAsSaved(index) {
 function listEntriesScroll(index) {
   var item = listEntries.getItem(index);
   var text = "";
+  var count = Object.keys(entriesMap).length;
   if(item == null)
   {
-    //console.log(index + " not found. Length:" + Object.keys(entriesMap).length);
+    updateStatus(index + " not found. Length:" + count);
   }
   else
   {
     var name = item.getText();
     if(entriesMap[name].summary != null) {
       text = entriesMap[name].summary.content;
+      setContentLabel(entriesMap[name].origin.title);
     }
     else {
-      //console.log(name + " not found in entriesmap");
+      updateStatus(name + " not found in entriesmap");
     }
   }
-
+  setlistEntrieslabel(index + '/' + count);
+  text = beautifyString(text);
   content.setContent(text);
-  screen.render();
+  try {
+    screen.render();
+  } catch (e) {
+    updateStatus(e);
+  } finally {
+  }
 }
 
 function updateStatus(content) {
-  status.setContent(content);
-  screen.render();
+  try {
+    status.setContent(JSON.stringify(content));
+  }catch(error) {
+  }
+  finally {
+    screen.render();
+  }
 }
 
 listCategories.items.forEach(function(item, i) {
@@ -360,7 +393,6 @@ listEntries.items.forEach(function(item, i) {
 });
 
 listCategories.focus();
-//list.enterSelected(0);
 
 screen.key('i', function() {
   content.resetScroll();
@@ -415,13 +447,3 @@ function cp437ToUtf8(buf, callback) {
     return callback(e);
   }
 }
-
-// Animating ANSI art doesn't work for screenshots.
-var ANIMATING = [
-  'bbs/void3',
-  'holiday/xmasfwks',
-  'unsorted/diver',
-  'unsorted/mash-chp',
-  'unsorted/ryans47',
-  'unsorted/xmasfwks'
-];
