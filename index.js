@@ -3,6 +3,8 @@ var util = require('util');
 var q = require('q');
 var request = require('request');
 var read = require('node-read');
+var open = require('open');
+
 
 var f = new Feedly({
   client_id: 'sandbox',
@@ -415,6 +417,16 @@ screen.key('q', function() {
 screen.key('s', function() {
   var index = listEntries.getScroll();
   markAsSaved(index);
+});
+
+screen.key('w', function() {
+  var index = listEntries.getScroll();
+  var text = listEntries.getItem(index).getText();
+  var entry = entriesMap[text];
+  if(entry.alternate != null)
+  {
+    open(entry.alternate[0].href);
+  }
 });
 
 screen.key('m', function() {
