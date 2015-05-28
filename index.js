@@ -421,12 +421,24 @@ screen.key('m', function() {
   var index = listEntries.getScroll();
   var values = Object.keys(entriesMap);
   var result = [];
+  var resultKeys = [];
+  var count = 0;
   for(i = 0; i<= index; i++)
   {
-    result.push(entriesMap[values[i]].id);
+    var entry = entriesMap[values[i]];
+    if(entry.unread)
+    {
+      result.push(entry.id);
+      resultKeys.push(values[i]);
+      count++;
+    }
   }
+
   f.markEntryRead(result).then(function(results){
-      updateStatus('marked ' + i + ' items as read');
+      updateStatus('marked ' + count + '/' + index + ' items as read');
+      resultKeys.forEach(function(obj) {
+        entriesMap[obj].unread = false;
+      });
   },
   function (error) {
       updateStatus(error);
