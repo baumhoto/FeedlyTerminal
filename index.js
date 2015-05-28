@@ -436,7 +436,8 @@ screen.key('t', function() {
   var entry = entriesMap[text];
   if(entry.alternate != null)
   {
-    var script = 'tell application "Terminal" to activate \n tell application "System Events" to tell process "Terminal" to keystroke "t" using command down \n tell application "Terminal" to do script "w3m ' + entry.alternate[0].href + '" in selected tab of the front window';
+    //var script = 'tell application "Terminal" to activate \n tell application "System Events" to tell process "Terminal" to keystroke "t" using command down \n tell application "Terminal" to do script "w3m ' + entry.alternate[0].href + '" in selected tab of the front window';
+    var script = 'tell application "iTerm" \n activate \n tell the first terminal \n launch session "Default Session" \n tell the last session \n write text "w3m  '+ entry.alternate[0].href + '" \n end tell \n end tell \n end tell';
     applescript.execString(script, function(err, rtn) {
       if (err) {
         console.log(err);
