@@ -115,7 +115,7 @@ var categoriesMap = null;
 f.categories().then(function(results) {
   categoriesMap = new Object();
   var userId = results[0].id.substring(0, results[0].id.lastIndexOf('/'));
-  results.unshift({ id: userId + '/global.saved', label: 'Saved'});
+  results.unshift({ id: userId.replace('categories','tag') + '/global.saved', label: 'Saved'});
   results.unshift({ id: userId + '/global.all', label: 'All'});
   results.forEach(function(obj) {
     categoriesMap[obj.label] = obj;
@@ -168,7 +168,7 @@ var status = blessed.box({
   style: {
     bg: 'blue'
   },
-  content: 'Select your piece of ANSI art (`/` to search).'
+  content: 'Feedly Terminal'
 });
 
 var loader = blessed.loading({
