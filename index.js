@@ -4,6 +4,7 @@ var q = require('q');
 var request = require('request');
 var read = require('node-read');
 var open = require('open');
+var applescript = require('applescript');
 
 
 var f = new Feedly({
@@ -426,6 +427,21 @@ screen.key('w', function() {
   if(entry.alternate != null)
   {
     open(entry.alternate[0].href);
+  }
+});
+
+screen.key('t', function() {
+  var index = listEntries.getScroll();
+  var text = listEntries.getItem(index).getText();
+  var entry = entriesMap[text];
+  if(entry.alternate != null)
+  {
+    var script = 'tell application "Terminal" to activate \n tell application "System Events" to tell process "Terminal" to keystroke "t" using command down \n tell application "Terminal" to do script "w3m ' + entry.alternate[0].href + '" in selected tab of the front window';
+    applescript.execString(script, function(err, rtn) {
+      if (err) {
+        console.log(err);
+      }
+  });
   }
 });
 
