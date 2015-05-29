@@ -9,7 +9,9 @@ var applescript = require('applescript');
 
 var f = new Feedly({
   client_id: 'sandbox',
-  developer: true,
+  // 'REPLACE with your client_secret or use your developer-token and set developer=true (NOTE: developer mode only works on cloud.feedly.com not in sandbox)'
+  client_secret: '',
+  developer: false,
   port: 8080
 });
 
