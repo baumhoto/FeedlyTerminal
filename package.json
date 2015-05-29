@@ -11,6 +11,7 @@
   "dependencies": {
     "applescript": "^1.0.0",
     "blessed": "^0.1.60",
+    "copy-paste": "^1.1.2",
     "feedly": "^0.1.2",
     "nconf": "^0.7.1",
     "node-read": "^0.1.6",

@@ -7,6 +7,7 @@ var open = require('open');
 var applescript = require('applescript');
 var fs    = require('fs'),
      nconf = require('nconf');
+var clipboard = require("copy-paste")
 
 nconf.file('./config.json');
 nconf.use('file', { file: './config.json' });
@@ -448,6 +449,7 @@ screen.key('t', function() {
   var entry = entriesMap[text];
   if(entry.alternate != null)
   {
+    clipboard.copy(entry.alternate[0].href);
     applescript.execString(nconf.get('applescript').replace('$href$', entry.alternate[0].href), function(err, rtn) {
       if (err) {
         console.log(err);
