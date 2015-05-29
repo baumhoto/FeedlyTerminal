@@ -59,12 +59,6 @@ var listCategories = blessed.list({
       bg: 'blue',
       bold: true
     }
-  },
-  search: function(callback) {
-    prompt.input('Search:', '', function(err, value) {
-      if (err) return;
-      return callback(null, value);
-    });
   }
 });
 
@@ -100,12 +94,6 @@ var listEntries = blessed.list({
       bg: 'blue',
       bold: true
     }
-  },
-  search: function(callback) {
-    prompt.input('Search:', '', function(err, value) {
-      if (err) return;
-      return callback(null, value);
-    });
   }
 });
 
@@ -128,6 +116,7 @@ f.categories().then(function(results) {
     categoriesMap[obj.label] = obj;
     });
   listCategories.setItems(Object.keys(categoriesMap));
+  screen.render();
 },
 function (error) {
 	updateStatus(error);
@@ -229,10 +218,9 @@ listCategories.on('select', function(el, selected) {
   loader.load('Loading...');
 
   var promise = f.contents(id, nconf.get('count'), nconf.get('ranked'), nconf.get('unreadOnly'));
-
   q.all(promise).then(function(result) {
-    listCategories._.rendering = false;
     loader.stop();
+    listCategories._.rendering = false;
 
     entriesMap = new Object();
     result.items.forEach(function(obj) {
@@ -242,13 +230,14 @@ listCategories.on('select', function(el, selected) {
     listEntries.setItems(Object.keys(entriesMap));
     setlistEntrieslabel(Object.keys(entriesMap).length);
     listEntries.focus();
+    screen.render();
   },
   function (error) {
-    listCategories._.rendering = false;
     updateStatus(error);
     loader.stop();
+    listCategories._.rendering = false;
+    screen.render();
   });
-  screen.render();
 });
 
 listEntries.on('select', function(el, selected) {
@@ -284,9 +273,9 @@ listEntries.on('select', function(el, selected) {
     catch(ex) {
       content.setContent('');
       updateStatus(ex);
+      screen.render();
     }
     finally {
-      screen.render();
     }
   });
 
