@@ -5,13 +5,17 @@ var request = require('request');
 var read = require('node-read');
 var open = require('open');
 var applescript = require('applescript');
+var fs    = require('fs'),
+     nconf = require('nconf');
 
+nconf.file('./config.json');
+nconf.use('file', { file: './config.json' });
 
 var f = new Feedly({
-  client_id: 'sandbox',
+  client_id: nconf.get('client_id'),
   // 'REPLACE with your client_secret or use your developer-token and set developer=true (NOTE: developer mode only works on cloud.feedly.com not in sandbox)'
-  client_secret: '',
-  developer: false,
+  client_secret: nconf.get('client_secret'),
+  developer: nconf.get('developer'),
   port: 8080
 });
 
@@ -224,7 +228,7 @@ listCategories.on('select', function(el, selected) {
   listCategories._.rendering = true;
   loader.load('Loading...');
 
-  var promise = f.contents(id, 500, 'oldest', true);
+  var promise = f.contents(id, nconf.get('count'), nconf.get('ranked'), nconf.get('unreadOnly'));
 
   q.all(promise).then(function(result) {
     listCategories._.rendering = false;
@@ -319,7 +323,9 @@ function listEntriesScrollDown(ch, key) {
       case 'down':
           if(index >= Object.keys(entriesMap).length - 1)
             return;
-          //markAsRead(index);
+          if(nconf.get('markAsRead'))
+            markAsRead(index);
+
           listEntriesScroll(index + 1);
         break;
       case 'k':
@@ -448,9 +454,7 @@ screen.key('t', function() {
   var entry = entriesMap[text];
   if(entry.alternate != null)
   {
-    //var script = 'tell application "Terminal" to activate \n tell application "System Events" to tell process "Terminal" to keystroke "t" using command down \n tell application "Terminal" to do script "w3m ' + entry.alternate[0].href + '" in selected tab of the front window';
-    var script = 'tell application "iTerm" \n activate \n tell the first terminal \n launch session "Default Session" \n tell the last session \n write text "w3m  '+ entry.alternate[0].href + '" \n end tell \n end tell \n end tell';
-    applescript.execString(script, function(err, rtn) {
+    applescript.execString(nconf.get('applescript').replace('$href$', entry.alternate[0].href), function(err, rtn) {
       if (err) {
         console.log(err);
       }
