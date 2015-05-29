@@ -9,6 +9,7 @@ var applescript = require('applescript');
 
 var f = new Feedly({
   client_id: 'sandbox',
+  developer: true,
   port: 8080
 });
 
@@ -237,7 +238,9 @@ listCategories.on('select', function(el, selected) {
     listEntries.focus();
   },
   function (error) {
+    listCategories._.rendering = false;
     updateStatus(error);
+    loader.stop();
   });
   screen.render();
 });
@@ -246,6 +249,13 @@ listEntries.on('select', function(el, selected) {
   if (listEntries._.rendering) return;
 
   var name = el.getText();
+
+  if(entriesMap[name] == null || entriesMap[name].alternate == null)
+  {
+        updateStatus(name + ' not found in entriesMap');
+        return;
+  }
+
   var url = entriesMap[name].alternate[0].href;
 
   listEntries._.rendering = true;
@@ -356,7 +366,7 @@ function listEntriesScroll(index) {
   else
   {
     var name = item.getText();
-    if(entriesMap[name].summary != null) {
+    if(entriesMap[name] != null && entriesMap[name].summary != null) {
       text = entriesMap[name].summary.content;
       setContentLabel(entriesMap[name].origin.title);
     }
