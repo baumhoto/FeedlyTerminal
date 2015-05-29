@@ -209,6 +209,11 @@ var entriesMap = null;
 
 listCategories.on('select', function(el, selected) {
   if (listCategories._.rendering) return;
+  if(el == null)
+  {
+    updateStatus('Error loading Categories');
+    return;
+  }
 
   var name = el.getText();
   var id = categoriesMap[name].id;
