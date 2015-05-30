@@ -110,7 +110,7 @@ var categoriesMap = null;
 f.categories().then(function(results) {
   categoriesMap = new Object();
   var userId = results[0].id.substring(0, results[0].id.lastIndexOf('/'));
-  results.unshift({ id: userId.replace('categories','tag') + '/global.saved', label: 'Saved'});
+  results.unshift({ id: userId.replace('category','tag') + '/global.saved', label: 'Saved'});
   results.unshift({ id: userId + '/global.all', label: 'All'});
   results.forEach(function(obj) {
     categoriesMap[obj.label] = obj;
@@ -471,17 +471,23 @@ screen.key('m', function() {
       resultKeys.push(values[i]);
       count++;
     }
-  }
 
-  f.markEntryRead(result).then(function(results){
-      updateStatus('marked ' + count + '/' + index + ' items as read');
-      resultKeys.forEach(function(obj) {
-        entriesMap[obj].unread = false;
+    if(result.lenth == 75)
+    {
+      f.markEntryRead(result).then(function(results){
+          resultKeys.forEach(function(obj) {
+            entriesMap[obj].unread = false;
+          });
+      },
+      function (error) {
+          updateStatus(error);
       });
-  },
-  function (error) {
-      updateStatus(error);
-  });
+
+      result = [];
+    }
+  }
+  updateStatus('marked ' + count + '/' + index + ' items as read');
+
 });
 
 
