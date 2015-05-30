@@ -287,8 +287,20 @@ listEntries.on('select', function(el, selected) {
 
 function beautifyString(string)
 {
-  return string.split("/<p[^>]*>/g").join("\n\n\n").split("</p>").join("")
+  var removeHtml = string//.split("/<p[^>]*>/g").join("\n\n\n").split("</p>").join("")
     .replace(/<(?:.|\n)*?>/gm, '');
+
+  for(i=0; i < removeHtml.length; i+=300)
+  {
+    var index = removeHtml.indexOf('.',i);
+    if(i == -1)
+        break;
+
+    i = index + 1;
+    removeHtml = [removeHtml.slice(0, i), '\n\n\n', removeHtml.slice(i)].join('');
+  }
+
+  return removeHtml;
 }
 
 listEntries.key('j', function(ch, key) {
@@ -349,7 +361,19 @@ function markAsSaved(index) {
   var name = item.getText();
   item = entriesMap[name];
   f.markEntrySaved(item.id).then(function(results){
-      updateStatus('success marked as saved');
+      updateStatus('Article has been Saved');
+  },
+  function (error) {
+      updateStatus(error);
+  });
+}
+
+function markAsUnsaved(index) {
+  var item = listEntries.getItem(index);
+  var name = item.getText();
+  item = entriesMap[name];
+  f.markEntryUnsaved(item.id).then(function(results){
+      updateStatus('Article has been unsaved');
   },
   function (error) {
       updateStatus(error);
@@ -431,6 +455,11 @@ screen.key('s', function() {
   markAsSaved(index);
 });
 
+screen.key('u', function() {
+  var index = listEntries.getScroll();
+  markAsUnsaved(index);
+});
+
 screen.key('v', function() {
   var index = listEntries.getScroll();
   var text = listEntries.getItem(index).getText();
@@ -441,7 +470,7 @@ screen.key('v', function() {
   }
 });
 
-screen.key('t', function() {
+screen.key('w', function() {
   var index = listEntries.getScroll();
   var text = listEntries.getItem(index).getText();
   var entry = entriesMap[text];
