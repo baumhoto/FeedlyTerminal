@@ -470,14 +470,44 @@ screen.key('v', function() {
   }
 });
 
-screen.key('w', function() {
+screen.key('1', function() {
   var index = listEntries.getScroll();
   var text = listEntries.getItem(index).getText();
   var entry = entriesMap[text];
   if(entry.alternate != null)
   {
     clipboard.copy(entry.alternate[0].href);
-    applescript.execString(nconf.get('applescript').replace('$href$', entry.alternate[0].href), function(err, rtn) {
+    applescript.execString(nconf.get('applescript1').replace('$href$', entry.alternate[0].href), function(err, rtn) {
+      if (err) {
+        console.log(err);
+      }
+  });
+  }
+});
+
+screen.key('2', function() {
+  var index = listEntries.getScroll();
+  var text = listEntries.getItem(index).getText();
+  var entry = entriesMap[text];
+  if(entry.alternate != null)
+  {
+    clipboard.copy(entry.alternate[0].href);
+    applescript.execString(nconf.get('applescript2').replace('$href$', entry.alternate[0].href), function(err, rtn) {
+      if (err) {
+        console.log(err);
+      }
+  });
+  }
+});
+
+screen.key('3', function() {
+  var index = listEntries.getScroll();
+  var text = listEntries.getItem(index).getText();
+  var entry = entriesMap[text];
+  if(entry.alternate != null)
+  {
+    clipboard.copy(entry.alternate[0].href);
+    applescript.execString(nconf.get('applescript3').replace('$href$', entry.alternate[0].href), function(err, rtn) {
       if (err) {
         console.log(err);
       }
@@ -501,9 +531,10 @@ screen.key('m', function() {
       count++;
     }
 
-    if(result.lenth == 75)
+    if(result.lenth >= 75 || i >= index)
     {
       f.markEntryRead(result).then(function(results){
+        updateStatus('marked ' + count + '/' + index + ' items as read');
           resultKeys.forEach(function(obj) {
             entriesMap[obj].unread = false;
           });
@@ -515,12 +546,7 @@ screen.key('m', function() {
       result = [];
     }
   }
-  updateStatus('marked ' + count + '/' + index + ' items as read');
-
 });
-
-
-screen.render();
 
 
 // https://github.com/chjj/blessed/issues/127

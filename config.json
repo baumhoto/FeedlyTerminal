@@ -6,5 +6,7 @@
   "count": 500,
   "unreadOnly" : true,
   "markAsRead" : false,
-  "applescript" : "tell application \"Terminal\" to activate \n tell application \"System Events\" to tell process \"Terminal\" to keystroke \"t\" using command down \n tell application \"Terminal\" to do script \"w3m $href$ \" in selected tab of the front window"
+  "applescript1" : "tell application \"iTerm\" \n activate \n tell the first terminal \n launch session \"External\" \n tell the last session \n write text \"w3m $href$\" \n end tell \n end tell \n end tell",
+  "applescript2" : "tell application \"System Events\" \n keystroke \"n\" using command down \n keystroke \"w3m \" \n keystroke \"v\" using command down \n key code 36 \n end tell",
+  "applescript3" : "tell application \"Terminal\" to activate \n tell application \"System Events\" to tell process \"Terminal\" to keystroke \"t\" using command down \n tell application \"Terminal\" to do script \"w3m $href$ \" in selected tab of the front window"
 }
