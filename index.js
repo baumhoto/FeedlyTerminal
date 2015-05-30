@@ -531,7 +531,7 @@ screen.key('m', function() {
       count++;
     }
 
-    if(result.lenth >= 75 || i >= index)
+    if(result.length >= 75 || i >= index)
     {
       f.markEntryRead(result).then(function(results){
         updateStatus('marked ' + count + '/' + index + ' items as read');
@@ -542,8 +542,8 @@ screen.key('m', function() {
       function (error) {
           updateStatus(error);
       });
-
       result = [];
+      resultKeys = [];
     }
   }
 });
