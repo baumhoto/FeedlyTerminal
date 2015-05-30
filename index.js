@@ -1,6 +1,5 @@
 var Feedly = require('feedly');
 var util = require('util');
-var q = require('q');
 var request = require('request');
 var read = require('node-read');
 var open = require('open');
@@ -223,8 +222,7 @@ listCategories.on('select', function(el, selected) {
   listCategories._.rendering = true;
   loader.load('Loading...');
 
-  var promise = f.contents(id, nconf.get('count'), nconf.get('ranked'), nconf.get('unreadOnly'));
-  q.all(promise).then(function(result) {
+  f.contents(id, nconf.get('count'), nconf.get('ranked'), nconf.get('unreadOnly')).then(function(result) {
     loader.stop();
     listCategories._.rendering = false;
 
@@ -433,7 +431,7 @@ screen.key('s', function() {
   markAsSaved(index);
 });
 
-screen.key('w', function() {
+screen.key('v', function() {
   var index = listEntries.getScroll();
   var text = listEntries.getItem(index).getText();
   var entry = entriesMap[text];
