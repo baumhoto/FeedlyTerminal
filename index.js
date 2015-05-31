@@ -290,16 +290,16 @@ function beautifyString(string)
   var removeHtml = string//.split("/<p[^>]*>/g").join("\n\n\n").split("</p>").join("")
     .replace(/<(?:.|\n)*?>/gm, '');
 
-  for(i=0; i < removeHtml.length; i+=300)
+  for(i=300; i < removeHtml.length; i+=300)
   {
     var index = removeHtml.indexOf('.',i);
-    if(i == -1)
+    if(index == -1)
         break;
 
     i = index + 1;
     removeHtml = [removeHtml.slice(0, i), '\n\n\n', removeHtml.slice(i)].join('');
   }
-
+  
   return removeHtml;
 }
 
