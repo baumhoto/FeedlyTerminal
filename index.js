@@ -6,7 +6,9 @@ var open = require('open');
 var applescript = require('applescript');
 var fs    = require('fs'),
      nconf = require('nconf');
-var clipboard = require("copy-paste")
+var clipboard = require("copy-paste");
+var exec = require('child_process').exec;
+var mkdirp = require('mkdirp');
 
 nconf.file('./config.json');
 nconf.use('file', { file: './config.json' });
@@ -548,6 +550,54 @@ screen.key('m', function() {
   }
 });
 
+screen.key('b', function() {
+  var count = 1;
+  Object.keys(entriesMap).forEach(function (key) {
+   updateStatus('Downloading ' + count + '/' + Object.keys(entriesMap).length + ' Entries');
+   var entry = entriesMap[key];
+    if(entry.alternate != null)
+    {
+      var shortId = entry.id.substr(entry.id.lastIndexOf('_'));
+      var entryDir = __dirname + '/content/' + shortId;
+      mkdirp(entryDir, function(err) { 
+      // path was created unless there was error
+    });
+    /*
+      if(!fs.existsSync(entryDir)) {
+        console.log('mkdir ' + entryDir);
+        exec('mkdir ' + entryDir, function (error, stdout, stderr) {
+          console.log(error);
+          console.log(stdout);
+          console.log(stderr);
+        });
+        
+      }
+      */
+      if(!fs.existsSync(entryDir + '/index.html')) {
+        console.log('httrack ' + count);
+        exec('httrack ' + entry.alternate[0].href + ' --depth=1 --ext-depth=1 -n --max-time=15 -O "' + entryDir + '"', function (error, stdout, stderr) {
+          //    open(entryDir + '/index.html');
+        });
+      }
+    }
+    count++;
+  });
+  updateStatus('Finished Downloading ' + entriesMap.size + ' Entries');
+});
+
+screen.key('n', function() {
+  var index = listEntries.getScroll();
+  var text = listEntries.getItem(index).getText();
+  var entry = entriesMap[text];
+  if(entry.alternate != null)
+  {
+    var shortId = entry.id.substr(entry.id.lastIndexOf('_'));
+    var entryDir = __dirname + '/content/' + shortId + '/index.html';
+    if(fs.existsSync(entryDir)) {
+          open(entryDir);
+    }
+  }
+});
 
 // https://github.com/chjj/blessed/issues/127
 // https://github.com/Mithgol/node-singlebyte
