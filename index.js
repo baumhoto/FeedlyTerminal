@@ -550,7 +550,7 @@ screen.key('m', function() {
   }
 });
 
-screen.key('b', function() {
+screen.key('t', function() {
   var count = 1;
   Object.keys(entriesMap).forEach(function (key) {
    updateStatus('Downloading ' + count + '/' + Object.keys(entriesMap).length + ' Entries');
@@ -574,10 +574,19 @@ screen.key('b', function() {
       }
       */
       if(!fs.existsSync(entryDir + '/index.html')) {
-        console.log('httrack ' + count);
-        exec('httrack ' + entry.alternate[0].href + ' --depth=1 --ext-depth=1 -n --max-time=15 -O "' + entryDir + '"', function (error, stdout, stderr) {
+        if(entry.alternate[0].href.indexOf('www.spiegel.de') > -1)
+        {
+          //console.log('curl');
+          exec('curl ' + entry.alternate[0].href + ' > ' + entryDir + '/index.html', function (error, stdout, stderr) {
           //    open(entryDir + '/index.html');
-        });
+          });
+        }
+        else {
+          //console.log('httrack');
+          exec('httrack ' + entry.alternate[0].href + ' --depth=1 --ext-depth=1 -n  --max-time=15 -O "' + entryDir + '"', function (error, stdout, stderr) {
+          //    open(entryDir + '/index.html');
+          });
+        }
       }
     }
     count++;
@@ -585,7 +594,7 @@ screen.key('b', function() {
   updateStatus('Finished Downloading ' + entriesMap.size + ' Entries');
 });
 
-screen.key('n', function() {
+screen.key('b', function() {
   var index = listEntries.getScroll();
   var text = listEntries.getItem(index).getText();
   var entry = entriesMap[text];
