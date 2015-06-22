@@ -557,11 +557,12 @@ screen.key('t', function() {
    var entry = entriesMap[key];
     if(entry.alternate != null)
     {
-      var shortId = entry.id.substr(entry.id.lastIndexOf('_'));
-      var entryDir = __dirname + '/content/' + shortId;
-      mkdirp(entryDir, function(err) { 
+      //var shortId = entry.id.substr(entry.id.lastIndexOf('_'));
+      var url = entry.alternate[0].href.replace('http://','');
+      var entryDir = __dirname + '/content/';
+      //mkdirp(entryDir, function(err) { 
       // path was created unless there was error
-    });
+      //});
     /*
       if(!fs.existsSync(entryDir)) {
         console.log('mkdir ' + entryDir);
@@ -573,7 +574,11 @@ screen.key('t', function() {
         
       }
       */
-      if(!fs.existsSync(entryDir + '/index.html')) {
+      if(!fs.existsSync(entryDir + url)) {
+        //console.log('wget ' + entryDir + url);
+          exec('wget -E -H -k -p ' + entry.alternate[0].href + ' -P ' + entryDir, function (error, stdout, stderr) {
+          });
+        /*
         if(entry.alternate[0].href.indexOf('www.spiegel.de') > -1)
         {
           //console.log('curl');
@@ -581,12 +586,14 @@ screen.key('t', function() {
           //    open(entryDir + '/index.html');
           });
         }
+        
         else {
           //console.log('httrack');
           exec('httrack ' + entry.alternate[0].href + ' --depth=1 --ext-depth=1 -n  --max-time=15 -O "' + entryDir + '"', function (error, stdout, stderr) {
           //    open(entryDir + '/index.html');
           });
         }
+        */
       }
     }
     count++;
@@ -600,10 +607,31 @@ screen.key('b', function() {
   var entry = entriesMap[text];
   if(entry.alternate != null)
   {
-    var shortId = entry.id.substr(entry.id.lastIndexOf('_'));
-    var entryDir = __dirname + '/content/' + shortId + '/index.html';
+    //var shortId = entry.id.substr(entry.id.lastIndexOf('_'));
+    var url = entry.alternate[0].href.replace('http://','');
+    var entryDir = __dirname + '/content/' + url;
+    if(entryDir.lastIndexOf('/') == entryDir.length -1)
+    {
+      updateStatus('Url ends with / adding index.html');
+      entryDir += "index.html"; 
+    }
+    
     if(fs.existsSync(entryDir)) {
-          open(entryDir);
+        updateStatus('opening ' + entryDir);
+        open(entryDir);
+    }
+    else if(fs.existsSync(entryDir + '.html')) {
+          updateStatus('opening (added html) ' + entryDir + ".html");
+          open(entryDir +  '.html');
+    }
+    else if(entryDir.indexOf('#') > -1)
+    {
+      entryDir = entryDir.substr(0, entryDir.indexOf('#'));
+       open(entryDir);
+    }
+    else
+    {
+      updateStatus('Error file not found ' + entryDir);
     }
   }
 });
