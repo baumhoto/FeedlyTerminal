@@ -557,43 +557,12 @@ screen.key('t', function() {
    var entry = entriesMap[key];
     if(entry.alternate != null)
     {
-      //var shortId = entry.id.substr(entry.id.lastIndexOf('_'));
       var url = entry.alternate[0].href.replace('http://','');
       var entryDir = __dirname + '/content/';
-      //mkdirp(entryDir, function(err) { 
-      // path was created unless there was error
-      //});
-    /*
-      if(!fs.existsSync(entryDir)) {
-        console.log('mkdir ' + entryDir);
-        exec('mkdir ' + entryDir, function (error, stdout, stderr) {
-          console.log(error);
-          console.log(stdout);
-          console.log(stderr);
-        });
-        
-      }
-      */
       if(!fs.existsSync(entryDir + url)) {
-        //console.log('wget ' + entryDir + url);
-          exec('wget -E -H -k -p ' + entry.alternate[0].href + ' -P ' + entryDir, function (error, stdout, stderr) {
+          //console.log('wget ' + entryDir + url);
+          exec('wget -E -H -k -p ' + entry.alternate[0].href + ' -P ' + entryDir, { cwd: entryDir } , function (error, stdout, stderr) {
           });
-        /*
-        if(entry.alternate[0].href.indexOf('www.spiegel.de') > -1)
-        {
-          //console.log('curl');
-          exec('curl ' + entry.alternate[0].href + ' > ' + entryDir + '/index.html', function (error, stdout, stderr) {
-          //    open(entryDir + '/index.html');
-          });
-        }
-        
-        else {
-          //console.log('httrack');
-          exec('httrack ' + entry.alternate[0].href + ' --depth=1 --ext-depth=1 -n  --max-time=15 -O "' + entryDir + '"', function (error, stdout, stderr) {
-          //    open(entryDir + '/index.html');
-          });
-        }
-        */
       }
     }
     count++;
@@ -626,8 +595,15 @@ screen.key('b', function() {
     }
     else if(entryDir.indexOf('#') > -1)
     {
-      entryDir = entryDir.substr(0, entryDir.indexOf('#'));
+       entryDir = entryDir.substr(0, entryDir.indexOf('#'));
        open(entryDir);
+    }
+    else if(entryDir.indexOf('/?') > -1)
+    {
+      //astrodicum simplex
+      entryDir = entryDir.substr(0, entryDir.indexOf('/?')) + '/index.html?utm_source=rss.html';
+      updateStatus(entryDir);
+      open(entryDir);
     }
     else
     {
