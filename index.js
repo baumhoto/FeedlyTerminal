@@ -234,6 +234,7 @@ listCategories.on('select', function(el, selected) {
     listEntries.setItems(Object.keys(entriesMap));
     setlistEntrieslabel(Object.keys(entriesMap).length);
     listEntries.focus();
+    listEntriesScroll(0);
     screen.render();
   },
   function (error) {
@@ -331,13 +332,13 @@ function listEntriesScrollDown(ch, key) {
           if(nconf.get('markAsRead'))
             markAsRead(index);
 
-          listEntriesScroll(index + 1);
+          listEntriesScroll(index);
         break;
       case 'k':
       case 'up':
-          if(index == 0)
+          if(index < 0)
             return;
-          listEntriesScroll(index - 1);
+          listEntriesScroll(index);
           break;
       default:
     }
@@ -384,7 +385,7 @@ function listEntriesScroll(index) {
   var item = listEntries.getItem(index);
   var text = "";
   var count = Object.keys(entriesMap).length;
-  if(item == null)
+  if(item == null || item === 'undefined')
   {
     updateStatus(index + " not found. Length:" + count);
   }
