@@ -397,7 +397,7 @@ function listEntriesScroll(index) {
       setContentLabel(entriesMap[name].origin.title);
     }
     else {
-      updateStatus(name + " not found in entriesmap");
+      updateStupdateStatusatus(name + " not found in entriesmap");
     }
   }
   setlistEntrieslabel(index + '/' + count);
@@ -413,7 +413,15 @@ function listEntriesScroll(index) {
 
 function updateStatus(content) {
   try {
-    status.setContent(JSON.stringify(content));
+    var currentdate = new Date(); 
+    var datetime = currentdate.getDate() + "/"
+                + (currentdate.getMonth()+1)  + "/" 
+                + currentdate.getFullYear() + " @ "  
+                + currentdate.getHours() + ":"  
+                + currentdate.getMinutes() + ":" 
+                + currentdate.getSeconds();
+
+    status.setContent(datetime + ": " + JSON.stringify(content));
   }catch(error) {
   }
   finally {
