@@ -397,7 +397,7 @@ function listEntriesScroll(index) {
       setContentLabel(entriesMap[name].origin.title);
     }
     else {
-      updateStupdateStatusatus(name + " not found in entriesmap");
+      updateStatus(name + " not found in entriesmap");
     }
   }
   setlistEntrieslabel(index + '/' + count);
