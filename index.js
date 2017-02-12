@@ -7,9 +7,24 @@ var applescript = require('applescript');
 var fs    = require('fs'),
      nconf = require('nconf');
 var clipboard = require("copy-paste")
+var Express = require('express');
+var GetPocket = require('node-getpocket');
+var http = require('follow-redirects').http;
+var https = require('follow-redirects').https;
 
 nconf.file('./config.json');
 nconf.use('file', { file: './config.json' });
+
+var cfg = {
+    consumer_key: nconf.get('pocket_consumer_key'),
+    request_token: '',
+    access_token: '',
+    user_name: '',
+    redirect_uri: 'http://localhost:8765/redirect'
+};
+
+var app = new Express();
+var pocket = new GetPocket(cfg);
 
 var f = new Feedly({
   client_id: nconf.get('client_id'),
@@ -441,15 +456,67 @@ listEntries.items.forEach(function(item, i) {
 
 listCategories.focus();
 
-screen.key('i', function() {
+screen.key('c', function() {
   content.resetScroll();
   listCategories.focus();
 });
 
-screen.key('o', function() {
+screen.key('e', function() {
   content.resetScroll();
   listEntries.focus();
 });
+
+screen.key('o', function() {
+   var index = listEntries.getScroll();
+  var text = listEntries.getItem(index).getText();
+  var entry = entriesMap[text];
+  if(entry.alternate != null)
+  {
+    //if(cfg.access_token == null || typeof cfg.access_token  === 'undefined' || cfg.access_token.length == 0)
+    {
+      console.log('request');
+      http.get('http://localhost:8765', function (response) {
+  response.on('data', function (chunk) {
+    //console.log(chunk);
+        saveToPocket(entry.alternate[0].href );
+  });
+}).on('error', function (err) {
+  console.error(err);
+});
+/*
+      request("http://localhost:8765", { followAllRedirects: true }, function (error, response, body) {
+      if (!error && response.statusCode == 200) {
+        saveToPocket(entry.alternate[0].href );
+        //console.log(body) // Show the HTML for the Google homepage. 
+      }
+    });
+    */
+}
+/*
+else
+{
+    console.log('acces token: ' + cfg.access_token);
+    saveToPocket(entry.alternate[0].href );
+}*/
+  }
+});
+
+function saveToPocket(url)
+{
+    var params = {
+      url: url 
+    };
+ pocket.add(params, function(err, resp) {
+    // check err or handle the response 
+    if(err)
+    {
+        updateStatus("Error saving to pocket:" + err)
+    }
+    else {
+        updateStatus("Article saved to pocket");
+    }
+    });
+}
 
 screen.key('p', function() {
   listCategories.focus();
@@ -568,3 +635,68 @@ function cp437ToUtf8(buf, callback) {
     return callback(e);
   }
 }
+
+app.get('/', function(req, res) {
+    var params = {
+        redirect_uri: cfg.redirect_uri
+    };
+    app.locals.res = res;
+    //console.log('Asking GetPocket for request token ...');
+    //console.log('params: ', params);
+    pocket.getRequestToken(params, function(err, resp, body) {
+        if (err) {
+            updateStatus('Failed to get request token: ' + err);
+            app.locals.res.send('<p>' + 'Failed to get request token: ' + err + '</p>');
+        }
+        else if (resp.statusCode !== 200) {
+            app.locals.res.send('<p>Oops, Pocket said ' + resp.headers.status + ', ' + resp.headers['x-error'] + '</p>');
+        }
+        else {
+            var json = JSON.parse(body);
+            cfg.request_token = json.code;
+            //console.log('Received request token: ' + cfg.request_token);
+
+            var url = pocket.getAuthorizeURL(cfg);
+            console.log('Redirecting to ' + url + ' for authentication');
+            app.locals.res.redirect(url);
+        }
+    });
+});
+app.get('/redirect', function(req, res) {
+    //console.log('Authentication callback active ...');
+    console.log('Asking GetPocket for access token ...');
+
+    app.locals.res = res;
+    var params = {
+        request_token: cfg.request_token
+    };
+    //console.log('params: ', params);
+
+    pocket.getAccessToken(params, function access_token_handler(err, resp, body) {
+        if (err) {
+            console.log('Failed to get access token: ' + err);
+            app.locals.res.send('<p>' + 'Failed to get access token: ' + err + '</p>');
+        }
+        else if (resp.statusCode !== 200) {
+            console.log('Pocket said ' + resp.headers.status + ', ' + resp.headers['x-error']);
+            app.locals.res.send('<p>Oops, Pocket said ' + resp.headers.status + ', ' + resp.headers['x-error'] + '</p>');
+        }
+        else {
+            var json = JSON.parse(body);
+            cfg.access_token = json.access_token;
+            cfg.user_name = json.username;
+            console.log('Received access token: ' + cfg.access_token + ' for user ' + cfg.user_name);
+            var config = {
+                consumer_key: cfg.consumer_key,
+                access_token: cfg.access_token
+            };
+            app.locals.res.send('<p>Pocket says "yes"</p>' +
+                '<p>Your <code>GetPocket</code> configuration should look like this ...</p>' +
+                '<p><code>var config = ' + JSON.stringify(config, undefined, 2) + ';</code></p>');
+        }
+    });
+});
+
+var server = app.listen(8765, '127.0.0.1', function() {
+    //console.log('Now listening at http://%s:%s', server.address().address, server.address().port);
+});

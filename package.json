@@ -12,8 +12,11 @@
     "applescript": "^1.0.0",
     "blessed": "^0.1.60",
     "copy-paste": "^1.1.2",
+    "express": "^4.14.1",
     "feedly": "^0.1.2",
+    "follow-redirects": "^1.2.1",
     "nconf": "^0.7.1",
+    "node-getpocket": "^1.0.0",
     "node-read": "^0.1.6",
     "open": "0.0.5",
     "request": "^2.55.0"
